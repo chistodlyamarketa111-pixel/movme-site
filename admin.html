@@ -202,10 +202,11 @@
           <th>Email</th>
           <th>Created</th>
           <th>Status</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="usersBody">
-        <tr><td colspan="3" style="color:rgba(255,255,255,0.3); padding-top:16px;">Loading...</td></tr>
+        <tr><td colspan="4" style="color:rgba(255,255,255,0.3); padding-top:16px;">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -286,6 +287,23 @@
     btn.textContent = 'Add User'
   }
 
+  async function deleteUser(id, email) {
+    if (!confirm(`Delete user ${email}?`)) return
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${SERVICE_KEY}`,
+          'apikey': SERVICE_KEY
+        }
+      })
+      if (!res.ok) throw new Error('Failed to delete')
+      loadUsers()
+    } catch (e) {
+      alert('Error: ' + e.message)
+    }
+  }
+
   async function loadUsers() {
     const tbody = document.getElementById('usersBody')
     try {
@@ -309,6 +327,7 @@
           <td>${u.email}</td>
           <td>${date}</td>
           <td><span class="badge">Active</span></td>
+          <td><button onclick="deleteUser('${u.id}', '${u.email}')" style="width:auto;padding:5px 12px;font-size:12px;background:rgba(255,69,58,0.15);color:#ff453a;border:1px solid rgba(255,69,58,0.3);border-radius:8px;">Delete</button></td>
         </tr>`
       }).join('')
 
