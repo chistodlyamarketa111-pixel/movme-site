@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movme Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0c2529;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: #f5feff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.4);
+      font-size: 13px;
+      margin-bottom: 32px;
+    }
+
+    label {
+      display: block;
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 13px 16px;
+      color: #f5feff;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    input::placeholder { color: rgba(255,255,255,0.25); }
+
+    button {
+      width: 100%;
+      background: rgba(245,254,255,0.9);
+      color: #0c2529;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+    }
+
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.4; cursor: default; }
+
+    .message {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .message.success {
+      background: rgba(52, 199, 89, 0.15);
+      border: 1px solid rgba(52, 199, 89, 0.3);
+      color: #34c759;
+      display: block;
+    }
+
+    .message.error {
+      background: rgba(255, 69, 58, 0.15);
+      border: 1px solid rgba(255, 69, 58, 0.3);
+      color: #ff453a;
+      display: block;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin: 24px 0;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+      margin-top: -10px;
+      margin-bottom: 16px;
+    }
+
+    /* Users table */
+    .users-section { display: none; }
+    .users-section.visible { display: block; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      color: rgba(255,255,255,0.4);
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    td {
+      padding: 10px 0;
+      color: rgba(255,255,255,0.8);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(52,199,89,0.15);
+      color: #34c759;
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="card" id="loginCard">
+  <div class="logo">Movme</div>
+  <div class="subtitle">Admin Panel</div>
+
+  <label>Admin password</label>
+  <input type="password" id="adminPass" placeholder="Enter password" onkeydown="if(event.key==='Enter') login()" />
+
+  <button onclick="login()">Enter</button>
+
+  <div class="message" id="loginMsg"></div>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div class="card" id="adminCard" style="display:none; max-width: 560px;">
+  <div class="logo">Movme</div>
+  <div class="subtitle">User Management</div>
+
+  <label>Email</label>
+  <input type="email" id="userEmail" placeholder="user@example.com" />
+
+  <label>Password</label>
+  <input type="text" id="userPass" placeholder="Leave empty — will be generated automatically" />
+  <div class="hint">If you leave the password field empty, a random password will be created and shown to you.</div>
+
+  <button id="createBtn" onclick="createUser()">Add User</button>
+
+  <div class="message" id="createMsg"></div>
+
+  <hr class="divider" />
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+    <label style="margin:0; font-size:14px; color:rgba(255,255,255,0.7);">Existing users</label>
+    <button onclick="loadUsers()" style="width:auto; padding:6px 14px; font-size:12px;">Refresh</button>
+  </div>
+
+  <div class="users-section visible" id="usersSection">
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Created</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="usersBody">
+        <tr><td colspan="3" style="color:rgba(255,255,255,0.3); padding-top:16px;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://jveyxylwemfivzlsclus.supabase.co'
+  const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2ZXl4eWx3ZW1maXZ6bHNjbHVzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDU2NTg1NiwiZXhwIjoyMDg2MTQxODU2fQ.9JA64wXBjVMDwzTZlrMmRZ-yH7NrtMywgsfYIAJcYcw'
+  const ADMIN_PASSWORD = 'Movme2024!'
+
+  function login() {
+    const pass = document.getElementById('adminPass').value
+    const msg = document.getElementById('loginMsg')
+    if (pass === ADMIN_PASSWORD) {
+      document.getElementById('loginCard').style.display = 'none'
+      document.getElementById('adminCard').style.display = 'block'
+      loadUsers()
+    } else {
+      msg.className = 'message error'
+      msg.textContent = 'Wrong password.'
+    }
+  }
+
+  function generatePassword() {
+    return Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase()
+  }
+
+  async function createUser() {
+    const email = document.getElementById('userEmail').value.trim()
+    const passInput = document.getElementById('userPass').value.trim()
+    const msg = document.getElementById('createMsg')
+    const btn = document.getElementById('createBtn')
+
+    if (!email) {
+      msg.className = 'message error'
+      msg.textContent = 'Please enter an email address.'
+      return
+    }
+
+    const password = passInput || generatePassword()
+    btn.disabled = true
+    btn.textContent = 'Creating...'
+    msg.className = 'message'
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SERVICE_KEY}`,
+          'apikey': SERVICE_KEY
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          email_confirm: true
+        })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.msg || data.message || 'Error creating user')
+      }
+
+      msg.className = 'message success'
+      msg.innerHTML = `✅ User created!<br><strong>Email:</strong> ${email}<br><strong>Password:</strong> ${password}`
+      document.getElementById('userEmail').value = ''
+      document.getElementById('userPass').value = ''
+      loadUsers()
+
+    } catch (e) {
+      msg.className = 'message error'
+      msg.textContent = '❌ ' + e.message
+    }
+
+    btn.disabled = false
+    btn.textContent = 'Add User'
+  }
+
+  async function loadUsers() {
+    const tbody = document.getElementById('usersBody')
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?per_page=50`, {
+        headers: {
+          'Authorization': `Bearer ${SERVICE_KEY}`,
+          'apikey': SERVICE_KEY
+        }
+      })
+      const data = await res.json()
+      const users = data.users || []
+
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="color:rgba(255,255,255,0.3);">No users yet</td></tr>'
+        return
+      }
+
+      tbody.innerHTML = users.map(u => {
+        const date = new Date(u.created_at).toLocaleDateString('en-GB')
+        return `<tr>
+          <td>${u.email}</td>
+          <td>${date}</td>
+          <td><span class="badge">Active</span></td>
+        </tr>`
+      }).join('')
+
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="3" style="color:#ff453a;">Failed to load users</td></tr>'
+    }
+  }
+</script>
+
+</body>
+</html>
